@@ -1,0 +1,141 @@
+---
+title: "Practical statistical inference"
+author: "Mike Frank"
+date: "10/27/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(BayesFactor)
+library(compute.es)
+```
+
+# Dataset
+
+In this markdown, we're going to consider statistical inferences in a simple dataset, a subset of the data from:
+
+> Barner, D., Athanasopoulou, A., Chu, J., Lewis, M. L., Marchand, E., Schneider, R. M., Frank, M. C. (in press). A one-year classroom-randomized trial of mental abacus instruction for first- and second-grade students. Journal of Numerical Cognition.
+
+First- and second-grade classrooms were randomly assigned to mental-abacus practice or control. We'll be looking at only the outcome data, and only their scores on a measure of place-value understanding. 
+
+```{r}
+d <- read_csv("https://raw.githubusercontent.com/langcog/majic/master/data/processed_data.csv") %>%
+  filter(year == "2016") %>%
+  select(subid, class_num, grade, group, pvAvg)
+
+d
+```
+
+```{r}
+d %>%
+  group_by(group) %>%
+    summarise(pv = mean(pvAvg, na.rm=TRUE), 
+              n = n()) 
+```
+
+```{r}
+ggplot(d, aes(x = pvAvg, fill = group)) + 
+  geom_histogram(binwidth = .1, position = "dodge")
+```
+
+```{r}
+ms <- d %>%
+  group_by(group) %>%
+  summarise(avg = mean(pvAvg, na.rm=TRUE),
+            ci = 1.96 * sd(pvAvg, na.rm=TRUE) / sqrt(sum(!is.na(pvAvg))))
+
+ggplot(ms, 
+       aes(x = group, y = avg)) + 
+  geom_pointrange(aes(ymin= avg - ci, ymax = avg + ci)) + 
+  ylim(0,1)
+```
+
+
+
+# Statistical Inference
+
+First, let's look at a t-test for the entire dataset.
+
+```{r}
+t <- with(d, 
+          t.test(pvAvg[group == "MA"], pvAvg[group == "CNTL"]))
+
+# the same as:
+# t.test(d$pvAvg[d$group == "MA"], d$pvAvg[d$group == "CNTL"]))
+
+t
+```
+
+Let's try a BayesFactor analysis. Documentation [here](http://bayesfactorpcl.r-forge.r-project.org/).
+
+This is a "JZS" test that assumes that the mean is zero under H0, and that H1 is a Cauchy (fat-tailed) distribution with a particular parameter ($\sqrt{2}/2$). 
+
+```{r}
+bf <- with(filter(d, !is.na(pvAvg)), 
+           ttestBF(x = pvAvg[group == "MA"], y = pvAvg[group == "CNTL"]))
+
+bf
+```
+
+Compute effect size.
+
+```{r}
+n1 <- sum(!is.na(d$pvAvg[d$group == "MA"]))
+n2 <- sum(!is.na(d$pvAvg[d$group == "CNTL"]))
+compute.es::tes(t = t$statistic, n.1 = n1, n.2 = n2)
+```
+
+# Grade-based analysis
+
+Consider breaking down the data by grade.
+
+```{r}
+d %>%
+  group_by(group, grade) %>%
+    summarise(pv = mean(pvAvg, na.rm=TRUE), 
+            n = n()) %>%
+  knitr::kable(digits = 2)
+```
+
+
+```{r}
+ggplot(d, aes(x = pvAvg, fill = group)) + 
+  geom_histogram(binwidth = .2, position = "dodge") +
+  facet_wrap(~grade)
+```
+```{r}
+ms <- d %>%
+  group_by(grade, group) %>%
+  summarise(avg = mean(pvAvg, na.rm=TRUE),
+            ci = 1.96 * sd(pvAvg, na.rm=TRUE) / sqrt(sum(!is.na(pvAvg))))
+
+ggplot(ms, 
+       aes(x = grade, y = avg, col = group)) + 
+  geom_pointrange(aes(ymin = avg - ci, ymax = avg + ci)) +
+  geom_line(aes(group = group)) +
+  ylim(0,1)
+```
+
+```{r}
+with(filter(d, grade == "second grade"), 
+          t.test(pvAvg[group == "MA"], pvAvg[group == "CNTL"]))
+```
+
+```{r}
+with(filter(d, grade == "second grade"), 
+     ttestBF(x = pvAvg[group == "MA"], y = pvAvg[group == "CNTL"]))
+```
+
+
+```{r}
+summary(lm(pvAvg ~ grade * group, data = d))
+```
+
+
+# Conclusions
+
+What we said:
+
+> "Neither age group showed a significant advantage in cognitive abilities or mathematical computation relative to controls, although older children showed some hints of an advantage in learning place-value concepts."

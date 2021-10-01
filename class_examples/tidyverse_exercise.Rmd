@@ -1,0 +1,109 @@
+---
+title: "Tidyverse Examples"
+author: "Psych 251 Staff"
+date: "10/1/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(knitr)
+```
+
+Fill in the blanks! The symbol ... is meant to show you where your code should go. 
+
+# Part 1: Practice manipulating data with tidyverse verbs
+
+Let's use `mtcars`, a built in dataset of cars and their miles/gallon (mpg), number of cylinders (cyl), displacement (disp), gross horsepower (hp), etc. 
+
+Run `mtcars` to take a brief look at the dataset:
+
+```{r}
+mtcars
+```
+
+First, summarise the average miles/gallon (mpg) across the entire dataset. 
+
+```{r}
+mtcars |>
+  summarise(...)
+```
+
+A car can either have 4, 6, or 8 cylinders (cyl). Summarise the average mpg, broken down by the number of cylinders. Hint: You may want to "group" by cyl in order to do this. 
+
+```{r}
+mtcars |>
+  ...
+```
+
+In addition to the means, add standard deviations to this summary (still grouped by cyl).
+
+```{r}
+mtcars |>
+  ...
+```
+
+**BONUS**: Let's visualize! Use ggplot (included in the tidyverse package) to make a scatter plot of mpg by horsepower (hp). If you are feeling extra fancy, you can add a smoothing line. (Hint: Google "geom_smooth() scatterplot".)
+
+```{r}
+ggplot(mtcars, 
+       aes(...)) + 
+  ...
+```
+
+# Part 2: Reshaping datasets
+
+We will first use a built-in dataset in the `tidyr` package: table3. We can use `help(table3)` to find its information.
+
+```{r}
+table3
+help(table3)
+```
+
+`table3` is in tidy format. Make this into wide data by using `pivot_wider`. (For more information on pivot_wider, try typing `?pivot_wider` in your console.)
+
+```{r}
+table3_wide <- table3 |>
+  pivot_wider(...) 
+```
+
+Now make it back into tidy data using `pivot_longer`. (Again, for more information on pivot_longer, try typing `?pivot_longer` in your console.)
+
+```{r}
+table3_long <- table3_wide |>
+  ...
+```
+
+# Part 3:  Applying the tools to a new dataset
+
+These are pre-post data on children's arithmetic scores from a RCT (Randomized Controlled Trial) in which they were assigned either to CNTL (control) or MA (mental abacus math intervention). They were tested twice, once in 2015 and once in 2016. The paper can be found at https://jnc.psychopen.eu/article/view/106.
+
+```{r}
+majic <- read_csv("data/majic.csv")
+```
+
+Make these tidy. (Observations in 2015 and 2016 should now be in separate rows.)
+
+```{r}
+majic_long <- majic |>
+  ...
+```
+
+Summarise this dataset, giving mean arithmetic score broken down by condition, grade, and year. Then output this as a nice table, having pivoted it wider so that the scores from the two years are next to each other. The first row of the final table should show the scores for the first graders in the control group in 2015 and 2015. 
+
+```{r}
+majic_summary <- majic_long |> 
+ ...
+
+majic_summary |>
+  ... |>
+  kable(digits = 2)
+```
+
+**BONUS**: Let's visualize! Make a nice plot of these data. 
+
+```{r}
+...
+```
+
+

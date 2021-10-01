@@ -1,0 +1,112 @@
+---
+title: "Tidyverse Examples"
+author: "Psych 251 Staff"
+date: "10/1/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(knitr)
+```
+
+# Part 1: Practice manipulating data with tidyverse verbs
+
+Let's use `mtcars`, a built in dataset of cars and their miles/gallon (mpg), number of cylinders (cyl), displacement (disp), gross horsepower (hp), etc. 
+
+```{r}
+mtcars
+```
+
+First, summarise the average miles/gallon (mpg) across the entire dataset. 
+
+```{r}
+mtcars |>
+  summarise(...)
+```
+
+A car can either have 4, 6, or 8 cylinders (cyl). Summarise the average mpg, broken down by the number of cylinders. Hint: You may want to "group" by cyl in order to do this. 
+
+```{r}
+mtcars |>
+  
+```
+
+In addition to the means, add standard deviations to this summary (still grouped by cyl).
+
+```{r}
+mtcars |>
+ 
+```
+
+**BONUS**: Let's visualize! Use ggplot (included in the tidyverse package) to make a scatter plot of mpg by horsepower. If you are feeling extra fancy, you can add a smoothing line. (Hint: Google "geom_smooth() scatterplot".)
+
+```{r}
+ggplot(mtcars, 
+       aes(...)) + 
+  ...
+```
+
+# Part 2: Reshaping datasets
+
+We will first use a built-in dataset in the `tidyr` package: table3. We can use `help(table3)` to find its information.
+
+```{r}
+table3
+help(table3)
+```
+
+`table3` is in tidy format. Make this into wide data by using `pivot_wider`.
+
+```{r}
+table3_wide <- table3 |>
+  pivot_wider(names_from = "year", values_from = "rate") 
+```
+
+Now make it back into tidy data using `pivot_longer`.
+
+```{r}
+table3_long <- table3_wide |>
+  pivot_longer(`1999`:`2000`, names_to = "year", values_to = "rate")
+```
+
+# Part 3:  Applying the tools to a new dataset
+
+These are pre-post data on children's arithmetic scores from a RCT (Randomized Controlled Trial) in which they were assigned either to CNTL (control) or MA (mental abacus math intervention). They were tested twice, once in 2015 and once in 2016. The paper can be found at https://jnc.psychopen.eu/article/view/106.
+
+```{r}
+majic <- read_csv("data/majic.csv")
+```
+
+Make these tidy. 
+
+```{r}
+majic_long <- majic |>
+  pivot_longer(cols = c(`2015`, `2016`), names_to = "year", values_to = "score")
+```
+
+Summarise this dataset, giving mean arithmetic score broken down by condition, grade, and year. Then output this as a nice table, having pivoted it wider so that the scores from the two years are next to each other. The first row of the final table should show the scores for the first graders in the control group in 2015 and 2015. 
+
+```{r}
+majic_summary <- majic_long |> 
+  group_by(grade, group, year) |>
+  summarise(mean_score = mean(score, na.rm=TRUE))
+
+majic_summary |>
+  pivot_wider(names_from = "year", values_from = "mean_score") |>
+  kable(digits = 2)
+```
+
+**BONUS**: Let's visualize! Make a nice plot of these data. 
+
+```{r}
+ggplot(majic_long, 
+       aes(x = year, y = score, col = group, group = group)) + 
+  geom_jitter(width = .1, height = 0, alpha = .5) + 
+  geom_smooth(method = "lm") + 
+  facet_wrap(~grade) + 
+  theme_classic()
+
+```
+
+
