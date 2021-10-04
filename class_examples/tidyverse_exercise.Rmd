@@ -26,29 +26,32 @@ First, summarise the average miles/gallon (mpg) across the entire dataset.
 
 ```{r}
 mtcars |>
-  summarise(...)
+  summarise(mean_mpg = mean(mpg))
 ```
 
 A car can either have 4, 6, or 8 cylinders (cyl). Summarise the average mpg, broken down by the number of cylinders. Hint: You may want to "group" by cyl in order to do this. 
 
 ```{r}
 mtcars |>
-  ...
+  group_by(cyl) |>
+  summarise(mean_mpg = mean(mpg))
 ```
 
 In addition to the means, add standard deviations to this summary (still grouped by cyl).
 
 ```{r}
 mtcars |>
-  ...
+  group_by(cyl) |>
+  summarise(mean_mpg = mean(mpg), sd_mpg = sd(mpg))
 ```
 
 **BONUS**: Let's visualize! Use ggplot (included in the tidyverse package) to make a scatter plot of mpg by horsepower (hp). If you are feeling extra fancy, you can add a smoothing line. (Hint: Google "geom_smooth() scatterplot".)
 
 ```{r}
 ggplot(mtcars, 
-       aes(...)) + 
-  ...
+       aes(x = hp, y = mpg)) +
+       geom_point() +
+       geom_smooth()
 ```
 
 # Part 2: Reshaping datasets
@@ -64,14 +67,18 @@ help(table3)
 
 ```{r}
 table3_wide <- table3 |>
-  pivot_wider(...) 
+  pivot_wider(names_from = year, values_from = rate) 
+
+table3_wide
 ```
 
 Now make it back into tidy data using `pivot_longer`. (Again, for more information on pivot_longer, try typing `?pivot_longer` in your console.)
 
 ```{r}
 table3_long <- table3_wide |>
-  ...
+  pivot_longer(c("1999", "2000"), names_to = "year", values_to = "rate")
+
+table3_long
 ```
 
 # Part 3:  Applying the tools to a new dataset
